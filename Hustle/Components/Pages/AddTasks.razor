@@ -1,0 +1,54 @@
+﻿@page "/add-task"
+@using Hustle.Models
+@using Hustle.Services
+@inject ITodoServices TodoServices
+@inject NavigationManager Navigation
+
+<div class="container mt-5">
+    <h3 class="mb-4">Add Task</h3>
+
+    <form>
+        <div class="mb-3">
+            <label for="taskTitle" class="form-label">Title</label>
+            <input type="text" id="taskTitle" class="form-control" @bind="task.Title" placeholder="Enter task title" />
+        </div>
+
+        <div class="mb-3">
+            <label for="taskDescription" class="form-label">Description</label>
+            <textarea id="taskDescription" class="form-control" rows="4" @bind="task.Description" placeholder="Enter task description (Optional)"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label for="dueDate" class="form-label">Due Date</label>
+            <input type="date" id="dueDate" class="form-control" @bind="task.DueDate" min="@DateTime.Now.ToString("yyyy-MM-dd")"/>
+        </div>
+
+        <div class="d-flex justify-content-end">
+            <button type="button" class="btn btn-primary me-2" @onclick="SaveTask">
+                <i class="fa-solid fa-save me-1"></i> Save
+            </button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancel">
+                <i class="fa-solid fa-times me-1"></i> Cancel
+            </button>
+        </div>
+    </form>
+</div>
+
+@code {
+    private TodoItems task = new TodoItems
+        {
+            Id = Guid.NewGuid(),
+            DueDate = DateTime.Today
+        };
+
+    private async Task SaveTask()
+    {
+        await TodoServices.SaveTodoAsync(task);
+        Navigation.NavigateTo("/");
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/");
+    }
+}

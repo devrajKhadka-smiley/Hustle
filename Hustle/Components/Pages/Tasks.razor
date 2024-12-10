@@ -1,0 +1,142 @@
+﻿@page "/"
+@using Hustle.Models
+@using Hustle.Services
+@inject ITodoServices TodoServices
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<div class="container mt-5">
+    <h3 class="mb-4">All Task</h3>
+
+    <table class="table table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th style="width: 15%; border: 1px solid #ddd;">Title</th>
+                <th style="width: 30%; border: 1px solid #ddd;">Description</th>
+                <th style="width: 20%; border: 1px solid #ddd;">Due Date</th>
+                <th style="width: 15%; border: 1px solid #ddd;">Status</th>
+                <th style="width: 20%; border: 1px solid #ddd;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var task in tasks)
+            {
+                <tr>
+                    <td>@task.Title</td>
+                    <td>@task.Description</td>
+                    <td>@task.DueDate.ToShortDateString()</td>
+                    <td>@(task.IsCompleted ? "Completed" : "Pending")</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm me-1" @onclick="() => OpenEditPanel(task.Id)">
+                            <i class="fa-solid fa-pencil-alt"></i>
+                        </button>
+                        <button class="btn btn-success btn-sm me-1" @onclick="() => MarkAsComplete(task.Id)">
+                            <i class="fa-solid fa-check"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm" @onclick="() => DeleteTask(task.Id)">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="editTaskPanel" aria-labelledby="editTaskPanelLabel">
+    <div class="offcanvas-header">
+        <h5 id="editTaskPanelLabel">Edit Task</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        @if (taskForEdit != null)
+        {
+            <EditForm Model="@taskForEdit" OnValidSubmit="HandleEditSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title</label>
+                    <InputText id="title" class="form-control" @bind-Value="taskForEdit.Title" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <InputText id="description" class="form-control" @bind-Value="taskForEdit.Description" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="dueDate" class="form-label">Due Date</label>
+                    <InputDate id="dueDate" class="form-control" @bind-Value="taskForEdit.DueDate" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <InputCheckbox id="isCompleted" class="form-check-input" @bind-Value="taskForEdit.IsCompleted" />
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </EditForm>
+        }
+    </div>
+</div>
+
+@code {
+    private List<TodoItems> tasks = new List<TodoItems>();
+    private TodoItems taskForEdit = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        tasks = await TodoServices.LoadTodoAsync();
+        SortTasksByDueDate();
+    }
+
+    private async Task OpenEditPanel(Guid taskId)
+    {
+        taskForEdit = tasks.FirstOrDefault(t => t.Id == taskId);
+        if (taskForEdit != null)
+        {
+            await JSRuntime.InvokeVoidAsync("eval", "$('#editTaskPanel').offcanvas('show')");
+        }
+    }
+
+    private async Task HandleEditSubmit()
+    {
+        if (taskForEdit != null)
+        {
+            await TodoServices.UpdateTodoAsync(taskForEdit);
+            taskForEdit = null;
+            tasks = await TodoServices.LoadTodoAsync();
+            SortTasksByDueDate();
+            await JSRuntime.InvokeVoidAsync("eval", "$('#editTaskPanel').offcanvas('hide')");
+        }
+    }
+
+    private async Task MarkAsComplete(Guid taskId)
+    {
+        var task = tasks.FirstOrDefault(t => t.Id == taskId);
+        if (task != null)
+        {
+            task.IsCompleted = true;
+            await TodoServices.UpdateTodoAsync(task);
+            tasks = await TodoServices.LoadTodoAsync();
+            SortTasksByDueDate();
+        }
+    }
+
+    private async Task DeleteTask(Guid taskId)
+    {
+        var task = tasks.FirstOrDefault(t => t.Id == taskId);
+        if (task != null)
+        {
+            await TodoServices.DeleteTodoAsync(task);
+            tasks = await TodoServices.LoadTodoAsync();
+            SortTasksByDueDate();
+        }
+    }
+
+    private void SortTasksByDueDate()
+    {
+        tasks = tasks.OrderBy(t => t.DueDate).ToList();
+    }
+}
