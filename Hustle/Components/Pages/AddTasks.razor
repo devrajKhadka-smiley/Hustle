@@ -20,7 +20,18 @@
 
         <div class="mb-3">
             <label for="dueDate" class="form-label">Due Date</label>
-            <input type="date" id="dueDate" class="form-control" @bind="task.DueDate" min="@DateTime.Now.ToString("yyyy-MM-dd")"/>
+            <input type="date" id="dueDate" class="form-control" @bind="task.DueDate" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+        </div>
+
+        <!-- Priority Dropdown -->
+        <div class="mb-3">
+            <label for="priority" class="form-label">Priority</label>
+            <select id="priority" class="form-control" @bind="task.Priority">
+                @foreach (var priority in Enum.GetValues(typeof(TaskPriority)).Cast<TaskPriority>())
+                {
+                    <option value="@priority">@priority</option>
+                }
+            </select>
         </div>
 
         <div class="d-flex justify-content-end">
@@ -38,7 +49,8 @@
     private TodoItems task = new TodoItems
         {
             Id = Guid.NewGuid(),
-            DueDate = DateTime.Today
+            DueDate = DateTime.Today,
+            Priority = TaskPriority.Low 
         };
 
     private async Task SaveTask()

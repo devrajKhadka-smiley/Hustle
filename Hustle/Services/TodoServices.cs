@@ -7,7 +7,7 @@ namespace Hustle.Services
     {
         private readonly string filePath = Path.Combine(AppContext.BaseDirectory, "TodosDatabase.json");
 
-        // Load all Todo items
+        // to load all todo items
         public async Task<List<TodoItems>> LoadTodoAsync()
         {
             try
@@ -43,7 +43,7 @@ namespace Hustle.Services
             }
         }
 
-        // Save a new Todo item
+        // to save / add the todo itemss
         public async Task SaveTodoAsync(TodoItems todoItem)
         {
             try
@@ -59,7 +59,7 @@ namespace Hustle.Services
             }
         }
 
-        // Update an existing Todo item
+        // edit/update the item
         public async Task UpdateTodoAsync(TodoItems todoItem)
         {
             try
@@ -73,6 +73,8 @@ namespace Hustle.Services
                     existingTodo.Description = todoItem.Description;
                     existingTodo.DueDate = todoItem.DueDate;
                     existingTodo.IsCompleted = todoItem.IsCompleted;
+                    existingTodo.Priority = todoItem.Priority; 
+                    existingTodo.IsPinned = todoItem.IsPinned; 
 
                     await SaveTodosToFileAsync(todos);
                 }
@@ -83,7 +85,7 @@ namespace Hustle.Services
             }
         }
 
-        // Delete a Todo item
+        // delete
         public async Task DeleteTodoAsync(TodoItems todoItem)
         {
             try
@@ -103,7 +105,7 @@ namespace Hustle.Services
             }
         }
 
-        // Mark a Todo item as completed
+        // complete or pending button
         public async Task MarkAsDoneAsync(Guid todoId)
         {
             try
@@ -123,7 +125,7 @@ namespace Hustle.Services
             }
         }
 
-        // Helper method to save all Todos to the file
+        //method to save all Todos to the file
         private async Task SaveTodosToFileAsync(List<TodoItems> todos)
         {
             try
